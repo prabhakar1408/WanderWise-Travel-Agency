@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import Hero from '../components/Hero'
+import Testimonials from '../components/Testimonials'
 
 const features = [
   {
@@ -70,6 +71,8 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      <Testimonials />
 
       <section className="relative h-105 flex items-center justify-center text-center overflow-hidden">
         <img

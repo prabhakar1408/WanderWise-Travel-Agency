@@ -1,11 +1,13 @@
 ﻿import { useState, useEffect } from 'react'
 import { NavLink, Link, useLocation } from 'react-router-dom'
-import { Menu, X, Plane } from 'lucide-react'
+import { Menu, X, Plane, Heart } from 'lucide-react'
+import { useWishlist } from '../context/WishlistContext'
 
 const links = [
   { name: 'Home', path: '/' },
   { name: 'Destinations', path: '/destinations' },
   { name: 'Tour Packages', path: '/packages' },
+  { name: 'Cost Calculator', path: '/calculator' },
   { name: 'About Us', path: '/about' },
   { name: 'Contact Us', path: '/contact' },
   { name: 'Travel Blog', path: '/blog' },
@@ -15,6 +17,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
+  const { items } = useWishlist()
   const isHome = pathname === '/'
 
   useEffect(() => {
@@ -26,12 +29,21 @@ export default function Navbar() {
 
   const solid = scrolled || !isHome || open
 
+  const heart = (
+    <Link to="/wishlist" aria-label="Wishlist" className="relative text-white hover:text-gold transition">
+      <Heart className="w-6 h-6" />
+      {items.length > 0 && (
+        <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-gold text-navy text-xs font-bold flex items-center justify-center">
+          {items.length}
+        </span>
+      )}
+    </Link>
+  )
+
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        solid
-          ? 'bg-navy/90 backdrop-blur-lg border-b border-gold/30 shadow-lg'
-          : 'bg-transparent'
+        solid ? 'bg-navy/90 backdrop-blur-lg border-b border-gold/30 shadow-lg' : 'bg-transparent'
       }`}
     >
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
@@ -40,7 +52,7 @@ export default function Navbar() {
           WanderWise
         </Link>
 
-        <ul className="hidden lg:flex items-center gap-8">
+        <ul className="hidden xl:flex items-center gap-6">
           {links.map((l) => (
             <li key={l.path}>
               <NavLink
@@ -57,24 +69,26 @@ export default function Navbar() {
           ))}
         </ul>
 
-        <Link
-          to="/packages"
-          className="hidden lg:inline-block border border-gold bg-gold/10 hover:bg-gold text-gold hover:text-navy text-sm font-semibold px-6 py-2.5 rounded-md transition"
-        >
-          Plan Your Trip
-        </Link>
+        <div className="hidden xl:flex items-center gap-5">
+          {heart}
+          <Link
+            to="/packages"
+            className="border border-gold bg-gold/10 hover:bg-gold text-gold hover:text-navy text-sm font-semibold px-6 py-2.5 rounded-md transition"
+          >
+            Plan Your Trip
+          </Link>
+        </div>
 
-        <button
-          className="lg:hidden text-white"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-        >
-          {open ? <X /> : <Menu />}
-        </button>
+        <div className="flex xl:hidden items-center gap-5">
+          {heart}
+          <button className="text-white" onClick={() => setOpen(!open)} aria-label="Toggle menu">
+            {open ? <X /> : <Menu />}
+          </button>
+        </div>
       </nav>
 
       {open && (
-        <div className="lg:hidden border-t border-gold/20">
+        <div className="xl:hidden border-t border-gold/20">
           <ul className="flex flex-col p-4 gap-3">
             {links.map((l) => (
               <li key={l.path}>
