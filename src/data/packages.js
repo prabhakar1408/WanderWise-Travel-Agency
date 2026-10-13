@@ -41,4 +41,55 @@
     itinerary: ['Arrival and Dubai Marina walk', 'Burj Khalifa and Dubai Mall', 'Desert safari with BBQ dinner', 'Old Dubai souks and departure'],
     includes: ['3 nights hotel stay', 'Daily breakfast', 'Burj Khalifa tickets', 'Desert safari', 'City transfers'],
   },
+  {
+    id: 7, title: 'Kashmir Paradise Tour', destination: 'Kashmir, India', tag: 'Mountain', days: 6, price: 420,
+    img: 'https://jkltravels.com/wp-content/uploads/2026/04/Escape-the-Summer-Heat-Discover-Kashmir-Jammu-Ladakh-with-JKL-Travels-—-Budget-Deals-Cool-Offers-Unforgettable-Journeys-in-2026.webp',
+    about: 'Dal Lake shikaras, snow meadows and Mughal gardens. Kashmir at its most beautiful.',
+    itinerary: ['Arrival in Srinagar and Dal Lake shikara ride', 'Mughal gardens and houseboat stay', 'Day trip to Gulmarg with gondola ride', 'Pahalgam valley and Betaab Valley', 'Sonmarg day trip', 'Shopping in Srinagar and departure'],
+    includes: ['5 nights hotel and houseboat stay', 'Daily breakfast and dinner', 'Private cab for sightseeing', 'Shikara ride', 'Airport transfers'],
+  },
+  {
+    id: 8, title: 'Ladakh Adventure Expedition', destination: 'Ladakh, India', tag: 'Adventure', days: 8, price: 650,
+    img: 'https://media.blacktomato.com/cdn-cgi/image/width=1520,height=800,fit=cover,quality=82,format=auto/https://media.blacktomato.com/2024/07/Tsemo-Fort-Leh.jpg',
+    about: 'High passes, blue lakes and monasteries. A trip for road-trip and adventure lovers.',
+    itinerary: ['Arrival in Leh and rest day to adjust to altitude', 'Leh Palace, Shanti Stupa and local market', 'Sham Valley with Magnetic Hill and Sangam', 'Nubra Valley via Khardung La', 'Camel safari at Hunder sand dunes', 'Drive to Pangong Lake', 'Pangong sunrise and return to Leh', 'Departure'],
+    includes: ['7 nights hotel and camp stay', 'Daily breakfast and dinner', 'Inner line permits', 'Private SUV with driver', 'Oxygen cylinder support'],
+  },
+  {
+    id: 9, title: 'Manali Mountain Escape', destination: 'Manali, India', tag: 'Mountain', days: 6, price: 350,
+    img: 'https://images.unsplash.com/photo-1593181629936-11c609b8db9b?auto=format&fit=crop&w=1200&q=80',
+    about: 'Snow, pine forests and adventure sports in the Kullu valley.',
+    itinerary: ['Arrival in Manali and Mall Road walk', 'Hadimba Temple and Old Manali cafes', 'Solang Valley activities', 'Atal Tunnel and Sissu', 'Naggar Castle and Jogini Falls', 'Departure'],
+    includes: ['5 nights hotel stay', 'Daily breakfast', 'Private cab for sightseeing', 'Solang Valley activity pass', 'Airport or bus-stand pickup'],
+  },
+  {
+    id: 10, title: 'Kasol Riverside Retreat', destination: 'Kasol, India', tag: 'Mountain', days: 5, price: 280,
+    img: 'https://cdn.travelcoffee.in/uploads/9a5d8711-5cd3-4a48-aed0-1c25450401cb-Tosh_Village.jpg',
+    about: 'Parvati river, cafes and easy treks in a calm Himalayan village.',
+    itinerary: ['Arrival in Kasol and riverside walk', 'Kheerganga trek base to camp', 'Kheerganga sunrise and hot springs', 'Malana and Manikaran Sahib visit', 'Cafe hopping and departure'],
+    includes: ['4 nights hotel and camp stay', 'Daily breakfast', 'Trek guide', 'Local transfers', 'Bonfire evening'],
+  },
+  {
+    id: 11, title: 'Andaman Island Getaway', destination: 'Andaman and Nicobar, India', tag: 'Beach', days: 6, price: 700,
+    img: 'https://www.india-tours.com/images/tours/tour-package-of-port-blair-and-havelock.jpg',
+    about: 'Clear water, white sand and coral reefs across Port Blair, Havelock and Neil Island.',
+    itinerary: ['Arrival in Port Blair and Cellular Jail light show', 'Ferry to Havelock and beach time', 'Radhanagar Beach and snorkeling', 'Scuba diving or glass-bottom boat', 'Neil Island and Bharatpur Beach', 'Return to Port Blair and departure'],
+    includes: ['5 nights hotel stay', 'Daily breakfast', 'Inter-island ferry tickets', 'Snorkeling session', 'Airport transfers'],
+  },
+  {
+    id: 12, title: 'Shimla Hills Holiday', destination: 'Shimla, India', tag: 'Mountain', days: 5, price: 300,
+    img: 'https://images.unsplash.com/photo-1597074866923-dc0589150358?auto=format&fit=crop&w=1200&q=80',
+    about: 'Colonial streets, toy train rides and cool mountain air.',
+    itinerary: ['Arrival in Shimla and Mall Road evening', 'The Ridge, Christ Church and Jakhu Temple', 'Kufri and Fagu day trip', 'Toy train ride to Kalka or Naldehra', 'Shopping at Lakkar Bazaar and departure'],
+    includes: ['4 nights hotel stay', 'Daily breakfast', 'Private cab for sightseeing', 'Toy train ticket', 'Local guide'],
+  },
+  {
+    id: 13, title: 'Goa Beach Holiday', destination: 'Goa, India', tag: 'Beach', days: 5, price: 380,
+    img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=1200&q=80',
+    about: 'Beaches, old Portuguese streets, seafood and sunset cruises.',
+    itinerary: ['Arrival and North Goa beach evening', 'Baga, Calangute and water sports', 'Old Goa churches and Fontainhas walk', 'South Goa beaches like Palolem', 'Sunset river cruise and departure'],
+    includes: ['4 nights beach hotel', 'Daily breakfast', 'Airport transfers', 'Sunset river cruise', 'Scooter or cab for local travel'],
+  },
 ]
+
+
