@@ -32,7 +32,7 @@ export default function DestinationCard({ d, index = 0 }) {
           <p className="text-sm text-white/70">
             From <span className="text-gold font-semibold text-lg">${d.price}</span>
           </p>
-          <Link to="/packages" className="text-sm border border-gold text-gold hover:bg-gold hover:text-navy px-4 py-1.5 rounded-md transition">
+          <Link to={'/destinations/' + d.id} className="text-sm border border-gold text-gold hover:bg-gold hover:text-navy px-4 py-1.5 rounded-md transition">
             Explore
           </Link>
         </div>
@@ -40,3 +40,4 @@ export default function DestinationCard({ d, index = 0 }) {
     </motion.div>
   )
 }
+
