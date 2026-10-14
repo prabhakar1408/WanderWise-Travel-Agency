@@ -9,7 +9,7 @@ const tags = ['All', 'Beach', 'City', 'Culture', 'Adventure', 'Mountain']
 export default function Destinations() {
   const [params] = useSearchParams()
   const [query, setQuery] = useState(params.get('q') || '')
-  const [tag, setTag] = useState('All')
+  const [tag, setTag] = useState(params.get('tag') || 'All')
 
   const filtered = destinations.filter((d) => {
     const text = (d.name + ' ' + d.country).toLowerCase()
@@ -68,3 +68,4 @@ export default function Destinations() {
     </>
   )
 }
+

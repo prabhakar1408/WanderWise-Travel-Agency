@@ -1,16 +1,48 @@
-﻿import { Link, useParams } from 'react-router-dom'
+﻿import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  MapPin, CalendarDays, Plane, BedDouble, ArrowLeft, ArrowRight, Star, Wallet,
-  Camera, Mountain, Waves, Landmark, TreePine, Sunset, Compass, Sparkles,
+  MapPin, CalendarDays, Plane, BedDouble, ArrowLeft, ArrowRight, Star, Clock, Check,
+  ChevronDown, Sparkles, Compass, Camera, Mountain, Waves, Landmark, TreePine, Sunset,
 } from 'lucide-react'
 import { destinations } from '../data/destinations'
 import { details } from '../data/details'
 import { packages } from '../data/packages'
 import { placeImages } from '../data/placeImages'
+import { wikiTitles } from '../data/wikiTitles'
+import { useWikiPhotos } from '../hooks/useWikiPhotos'
 import HeartButton from '../components/HeartButton'
 
 const icons = [Camera, Mountain, Waves, Landmark, TreePine, Sunset, Compass]
+const grads = [
+  'from-navy via-navy to-gold-dark/80',
+  'from-sky-900 via-navy to-sky-600/70',
+  'from-emerald-900 via-navy to-emerald-600/70',
+  'from-indigo-900 via-navy to-indigo-500/70',
+  'from-rose-900 via-navy to-rose-500/60',
+  'from-amber-800 via-navy to-amber-500/60',
+]
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+function bestMonths(text) {
+  const on = new Set()
+  const names = MONTHS.join('|')
+  const range = new RegExp('(' + names + ') to (' + names + ')', 'g')
+  let m
+  while ((m = range.exec(text))) {
+    let i = MONTHS.indexOf(m[1])
+    const j = MONTHS.indexOf(m[2])
+    on.add(i)
+    while (i !== j) {
+      i = (i + 1) % 12
+      on.add(i)
+    }
+  }
+  const rest = text.replace(range, '')
+  ;(rest.match(new RegExp(names, 'g')) || []).forEach((n) => on.add(MONTHS.indexOf(n)))
+  return on
+}
 
 const badge = {
   Luxury: 'bg-gold text-navy',
@@ -18,24 +50,82 @@ const badge = {
   Budget: 'bg-emerald-500 text-white',
 }
 
-function Fact({ icon: Icon, label, value }) {
+const crops = ['object-left-top', 'object-left-bottom', 'object-right-top', 'object-right-bottom']
+
+function Tile({ photo, fallback, className }) {
+  const [bad, setBad] = useState(false)
+  const src = bad ? fallback : photo.src
+  const zoom = bad || photo.zoom
+  return (
+    <div className={'group relative overflow-hidden rounded-2xl ' + className}>
+      <img
+        src={src}
+        alt=""
+        onError={() => setBad(true)}
+        className={'w-full h-full object-cover transition duration-700 group-hover:scale-110 ' + (zoom ? 'scale-150 ' + (photo.pos || 'object-right-top') : '')}
+      />
+    </div>
+  )
+}
+
+function PlacePhoto({ src, name, index }) {
+  const [bad, setBad] = useState(false)
+  const Icon = icons[index % icons.length]
+  if (src && !bad) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        loading="lazy"
+        onError={() => setBad(true)}
+        className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+      />
+    )
+  }
+  return (
+    <div className={'relative w-full h-full bg-linear-to-br flex items-center justify-center ' + grads[index % grads.length]}>
+      <div className="absolute inset-0 opacity-30" style={{ backgroundImage: 'radial-gradient(rgba(201,162,75,0.5) 1.5px, transparent 1.5px)', backgroundSize: '20px 20px' }} />
+      <Icon className="relative w-16 h-16 text-gold/80 group-hover:scale-110 transition duration-500" />
+    </div>
+  )
+}
+
+function Stat({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="w-11 h-11 shrink-0 rounded-full bg-navy flex items-center justify-center">
-        <Icon className="w-5 h-5 text-gold" />
+      <div className="w-10 h-10 shrink-0 rounded-xl border border-gold/30 bg-white flex items-center justify-center">
+        <Icon className="w-5 h-5 text-gold-dark" />
       </div>
       <div>
-        <p className="text-[11px] uppercase tracking-widest text-gold-dark">{label}</p>
-        <p className="text-sm text-slate-700 leading-snug">{value}</p>
+        <p className="text-[11px] text-slate-500">{label}</p>
+        <p className="text-sm font-semibold text-navy leading-snug">{value}</p>
       </div>
+    </div>
+  )
+}
+
+function Row({ n, title, open, onToggle, children }) {
+  return (
+    <div className="border-b border-gold/25">
+      <button onClick={onToggle} className="w-full flex items-center gap-4 py-4 text-left">
+        <span className="w-8 h-8 shrink-0 rounded-full border border-gold/50 text-gold-dark text-sm font-semibold flex items-center justify-center">{n}</span>
+        <span className="flex-1 font-semibold text-navy">{title}</span>
+        <ChevronDown className={'w-5 h-5 text-gold-dark transition ' + (open ? 'rotate-180' : '')} />
+      </button>
+      {open && <div className="pl-12 pb-5">{children}</div>}
     </div>
   )
 }
 
 export default function DestinationDetails() {
   const { id } = useParams()
+  const [openDay, setOpenDay] = useState(0)
+
   const d = destinations.find((x) => String(x.id) === id)
-  const info = details[id]
+  const info = (d && details[id]) || { intro: 'Details coming soon.', bestTime: '-', airport: '-', places: [], stays: [], packageId: null }
+
+  const titles = info.places.map((p) => wikiTitles[p.name]).filter(Boolean)
+  const wiki = useWikiPhotos(titles)
 
   if (!d) {
     return (
@@ -46,247 +136,212 @@ export default function DestinationDetails() {
     )
   }
 
-  const pkg = info && info.packageId ? packages.find((p) => p.id === info.packageId) : null
+  const pkg = info.packageId ? packages.find((p) => p.id === info.packageId) : null
+  const months = bestMonths(info.bestTime)
   const similar = destinations
     .filter((x) => x.id !== d.id)
     .sort((a, b) => (b.tag === d.tag) - (a.tag === d.tag))
     .slice(0, 3)
 
+  const photoFor = (p) => placeImages[p.name] || wiki[wikiTitles[p.name]]
+  const found = info.places.map(photoFor).filter(Boolean)
+
+  const gallery = [{ src: d.img, zoom: false }]
+  for (let i = 0; i < 4; i++) {
+    gallery.push(found[i] ? { src: found[i], zoom: false } : { src: d.img, zoom: true, pos: crops[i] })
+  }
+
+  const bookTo = pkg ? '/packages/' + pkg.id : '/contact'
+
   return (
     <>
-      {/* HERO */}
-      <section className="relative min-h-125 flex items-end overflow-hidden">
-        <motion.img
-          src={d.img}
-          alt={d.name}
-          initial={{ scale: 1.12 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.8 }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-navy/95 via-navy/40 to-navy/60" />
-        <HeartButton itemKey={'d-' + d.id} className="absolute top-28 right-6 z-10" />
-
-        <div className="relative max-w-7xl mx-auto w-full px-4 sm:px-6 pb-28 pt-40 text-white">
-          <Link to="/destinations" className="inline-flex items-center gap-1 text-sm text-gold mb-5">
-            <ArrowLeft className="w-4 h-4" /> All destinations
-          </Link>
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur border border-white/30 text-xs px-3 py-1 rounded-full">
-              <Sparkles className="w-3 h-3 text-gold" /> {d.tag}
-            </span>
-            <h1 className="font-serif text-5xl sm:text-7xl mt-4">{d.name}</h1>
-            <div className="flex flex-wrap items-center gap-5 mt-4 text-white/90">
-              <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-gold" /> {d.country}</span>
-              <span className="flex items-center gap-1"><Star className="w-4 h-4 text-gold fill-gold" /> {d.rating} rating</span>
-            </div>
-          </motion.div>
-        </div>
+      {/* GALLERY */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-28">
+        <Link to="/destinations" className="inline-flex items-center gap-1 text-sm text-gold-dark font-medium mb-4">
+          <ArrowLeft className="w-4 h-4" /> All destinations
+        </Link>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="relative grid grid-cols-2 lg:grid-cols-4 lg:grid-rows-2 gap-3 h-72 sm:h-96 lg:h-120"
+        >
+          <Tile photo={gallery[0]} fallback={d.img} className="col-span-2 lg:col-start-2 lg:row-start-1 lg:row-span-2" />
+          <Tile photo={gallery[1]} fallback={d.img} className="hidden lg:block lg:col-start-1 lg:row-start-1" />
+          <Tile photo={gallery[2]} fallback={d.img} className="hidden lg:block lg:col-start-1 lg:row-start-2" />
+          <Tile photo={gallery[3]} fallback={d.img} className="hidden lg:block lg:col-start-4 lg:row-start-1" />
+          <Tile photo={gallery[4]} fallback={d.img} className="hidden lg:block lg:col-start-4 lg:row-start-2" />
+          <HeartButton itemKey={'d-' + d.id} className="absolute top-4 right-4 z-10" />
+          <span className="absolute bottom-4 left-4 z-10 flex items-center gap-1 bg-white/90 backdrop-blur text-navy text-xs font-semibold px-3 py-1.5 rounded-full">
+            <Camera className="w-3.5 h-3.5 text-gold-dark" /> {d.name}, {d.country}
+          </span>
+        </motion.div>
       </section>
 
-      {!info ? (
-        <section className="max-w-3xl mx-auto px-4 py-20 text-center">
-          <h2 className="font-serif text-3xl text-navy">Details coming soon</h2>
-          <p className="text-slate-600 mt-3">We are adding places to visit and stays for {d.name}.</p>
-          <Link to="/packages" className="inline-flex items-center gap-2 mt-6 bg-navy text-gold font-semibold px-7 py-3 rounded-md">
-            View Packages <ArrowRight className="w-4 h-4" />
-          </Link>
-        </section>
-      ) : (
-        <>
-          {/* FACTS BAR */}
-          <section className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 -mt-16">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 bg-white/85 backdrop-blur-xl border border-gold/30 rounded-2xl p-6 shadow-2xl"
-            >
-              <Fact icon={CalendarDays} label="Best time" value={info.bestTime} />
-              <Fact icon={Plane} label="Nearest airport" value={info.airport} />
-              <Fact icon={Wallet} label="Starting from" value={'$' + d.price + ' per person'} />
-              <Fact icon={Star} label="Traveller rating" value={d.rating + ' out of 5'} />
-            </motion.div>
-          </section>
+      {/* MAIN */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div className="lg:col-span-2">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className="bg-white border border-gold/30 text-slate-700 px-3 py-1 rounded-md">{d.tag}</span>
+            <span className="text-slate-500">{d.country}</span>
+          </div>
+          <h1 className="font-serif text-4xl sm:text-5xl text-navy mt-4">{d.name}{pkg ? ': ' + pkg.title : ''}</h1>
+          <p className="mt-4 text-slate-600 leading-relaxed">{info.intro}</p>
 
-          {/* STICKY MENU */}
-          <nav className="sticky top-20 z-30 mt-10 bg-white/85 backdrop-blur border-y border-gold/20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-8 overflow-x-auto text-sm font-medium">
-              {[['overview', 'Overview'], ['places', 'Places'], ['stays', 'Stays'], ['more', 'More']].map(([h, l]) => (
-                <a key={h} href={'#' + h} className="py-4 whitespace-nowrap text-slate-700 hover:text-gold-dark transition">
-                  {l}
-                </a>
-              ))}
-            </div>
-          </nav>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 py-7 mt-7 border-y border-gold/25">
+            <Stat icon={Clock} label="Duration" value={pkg ? pkg.days + ' days' : 'Flexible'} />
+            <Stat icon={CalendarDays} label="Best time" value={info.bestTime.split('(')[0]} />
+            <Stat icon={Plane} label="Nearest airport" value={info.airport.split(' (')[0].split(',')[0]} />
+            <Stat icon={Star} label="Rating" value={d.rating + ' out of 5'} />
+          </div>
 
-          {/* OVERVIEW */}
-          <section id="overview" className="scroll-mt-40 max-w-7xl mx-auto px-4 sm:px-6 py-16 grid grid-cols-1 lg:grid-cols-3 gap-10">
-            <div className="lg:col-span-2">
-              <p className="uppercase tracking-[0.3em] text-xs text-gold-dark">Overview</p>
-              <h2 className="font-serif text-4xl text-navy mt-3">Discover {d.name}</h2>
-              <div className="mt-4 h-px w-20 bg-gold" />
-              <p className="mt-6 text-lg text-slate-600 leading-relaxed">{info.intro}</p>
-              <div className="flex flex-wrap gap-3 mt-6">
-                {[d.tag, d.country, info.places.length + ' places to see', info.stays.length + ' stay options'].map((c) => (
-                  <span key={c} className="bg-white border border-gold/30 text-slate-700 text-sm px-4 py-1.5 rounded-full">{c}</span>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative overflow-hidden bg-navy text-white rounded-2xl p-7 shadow-xl h-fit">
-              <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-gold/20 blur-3xl" />
-              <div className="absolute -bottom-12 -left-10 w-40 h-40 rounded-full bg-sky-400/10 blur-3xl" />
-              <p className="relative text-gold text-xs uppercase tracking-widest">Plan your trip</p>
-              <p className="relative font-serif text-4xl mt-2">${d.price}<span className="text-base text-white/60"> / person</span></p>
-              <Link to="/planner" className="relative flex items-center justify-center gap-2 mt-6 bg-gold hover:bg-gold-dark text-navy hover:text-white font-semibold py-3 rounded-lg transition">
-                <Sparkles className="w-4 h-4" /> Use AI Planner
-              </Link>
-              <Link to="/contact" className="relative block text-center mt-3 border border-gold/60 text-gold hover:bg-gold hover:text-navy font-semibold py-3 rounded-lg transition">
-                Enquire Now
-              </Link>
-            </div>
-          </section>
-
-          {/* PLACES */}
-          <section id="places" className="scroll-mt-40 max-w-7xl mx-auto px-4 sm:px-6 pb-20">
-            <div className="text-center mb-12">
-              <p className="uppercase tracking-[0.3em] text-xs text-gold-dark">Must see</p>
-              <h2 className="font-serif text-4xl text-navy mt-3">Best Places to Visit</h2>
-              <div className="mx-auto mt-5 h-px w-20 bg-gold" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-7">
-              {info.places.map((p, i) => {
-                const Icon = icons[i % icons.length]
-                const photo = placeImages[p.name]
-                return (
-                  <motion.div
-                    key={p.name}
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: (i % 3) * 0.1, duration: 0.5 }}
-                    className="group bg-white border border-gold/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition duration-300"
-                  >
-                    <div className="relative h-44 overflow-hidden">
-                      {photo ? (
-                        <img src={photo} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                      ) : (
-                        <div className="relative w-full h-full bg-linear-to-br from-navy via-navy to-gold-dark/80 flex items-center justify-center">
-                          <Icon className="w-16 h-16 text-gold/70 group-hover:scale-110 transition duration-500" />
-                          <span className="absolute right-4 bottom-0 font-serif text-8xl leading-none text-white/10">
-                            {String(i + 1).padStart(2, '0')}
-                          </span>
-                        </div>
-                      )}
-                      <span className="absolute top-3 left-3 w-9 h-9 rounded-full bg-gold text-navy font-bold flex items-center justify-center shadow-lg">
-                        {i + 1}
-                      </span>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="font-serif text-xl text-navy">{p.name}</h3>
-                      <p className="mt-2 text-sm text-slate-600 leading-relaxed">{p.text}</p>
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </section>
-
-          {/* STAYS */}
-          <section id="stays" className="scroll-mt-40 relative bg-navy pt-28 pb-20 overflow-hidden">
-            <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="absolute top-0 left-0 w-full h-14 rotate-180">
-              <path fill="#f6f1e8" d="M0,40 C240,80 480,0 720,30 C960,60 1200,70 1440,20 L1440,80 L0,80 Z" />
-            </svg>
-            <div className="absolute top-20 -left-24 w-80 h-80 rounded-full bg-gold/10 blur-3xl" />
-            <div className="absolute bottom-0 -right-24 w-96 h-96 rounded-full bg-sky-400/10 blur-3xl" />
-
-            <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-              <div className="text-center mb-12">
-                <p className="uppercase tracking-[0.3em] text-xs text-gold">Where to stay</p>
-                <h2 className="font-serif text-4xl text-white mt-3">Hotels and Stays</h2>
-                <div className="mx-auto mt-5 h-px w-20 bg-gold" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {info.stays.map((s, i) => (
-                  <motion.div
-                    key={s.name}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1, duration: 0.5 }}
-                    className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:bg-white/15 hover:-translate-y-1 transition duration-300"
-                  >
-                    <div className="w-12 h-12 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center">
-                      <BedDouble className="w-6 h-6 text-gold" />
-                    </div>
-                    <h3 className="font-serif text-xl text-white mt-4">{s.name}</h3>
-                    <p className="text-sm text-white/70 mt-1">{s.type}</p>
-                    <p className="flex items-center gap-1 text-sm text-white/70 mt-1">
-                      <MapPin className="w-4 h-4 text-gold" /> {s.area}
-                    </p>
-                    <span className={'inline-block mt-4 text-xs font-semibold px-3 py-1 rounded-full ' + (badge[s.budget] || 'bg-gold text-navy')}>
-                      {s.budget}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-              <p className="text-xs text-white/50 text-center mt-8">
-                Stay suggestions only. Please check current availability and rates before booking.
-              </p>
-            </div>
-          </section>
-
-          {/* MORE */}
-          <section id="more" className="scroll-mt-40 max-w-7xl mx-auto px-4 sm:px-6 py-20">
-            <div className="text-center mb-12">
-              <p className="uppercase tracking-[0.3em] text-xs text-gold-dark">Keep exploring</p>
-              <h2 className="font-serif text-4xl text-navy mt-3">You May Also Like</h2>
-              <div className="mx-auto mt-5 h-px w-20 bg-gold" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {similar.map((x) => (
-                <Link
-                  key={x.id}
-                  to={'/destinations/' + x.id}
-                  className="group relative h-72 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition"
-                >
-                  <img src={x.img} alt={x.name} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                  <div className="absolute inset-0 bg-linear-to-t from-navy/90 via-navy/10 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 p-5 text-white">
-                    <h3 className="font-serif text-2xl">{x.name}</h3>
-                    <p className="flex items-center justify-between text-sm text-white/80 mt-1">
-                      <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-gold" /> {x.country}</span>
-                      <span className="text-gold font-semibold">From ${x.price}</span>
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-
-          {/* CTA */}
-          <section className="relative h-80 flex items-center justify-center text-center overflow-hidden">
-            <img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-navy/75" />
-            <div className="relative px-4">
-              <p className="uppercase tracking-[0.3em] text-xs text-gold">{pkg ? 'Ready to go?' : 'Interested in ' + d.name + '?'}</p>
-              <h2 className="font-serif text-3xl sm:text-4xl text-white mt-3">
-                {pkg ? pkg.title : 'Let us plan it for you'}
-              </h2>
-              {pkg && (
-                <p className="text-white/70 mt-2">{pkg.days} days, from <span className="text-gold font-semibold">${pkg.price}</span> per person</p>
-              )}
-              <Link
-                to={pkg ? '/packages/' + pkg.id : '/contact'}
-                className="inline-flex items-center gap-2 mt-6 bg-gold hover:bg-gold-dark text-navy hover:text-white font-semibold px-8 py-3 rounded-md transition"
+          <h2 className="font-serif text-3xl text-navy mt-10">Best Months to Visit</h2>
+          <div className="grid grid-cols-6 sm:grid-cols-12 gap-2 mt-5">
+            {MONTHS.map((m, i) => (
+              <div
+                key={m}
+                className={'text-center text-xs font-semibold py-2.5 rounded-lg border ' + (months.has(i) ? 'bg-gold text-navy border-gold shadow' : 'bg-white text-slate-400 border-gold/15')}
               >
-                {pkg ? 'View Package' : 'Contact Us'} <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </section>
-        </>
-      )}
+                {m.slice(0, 3)}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-slate-600 mt-3">{info.bestTime}</p>
+
+          {pkg && (
+            <>
+              <h2 className="font-serif text-3xl text-navy mt-12">What's Included</h2>
+              <ul className="mt-5 grid sm:grid-cols-2 gap-3 bg-white border border-gold/25 rounded-2xl p-6">
+                {pkg.includes.map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-slate-700 text-sm">
+                    <span className="w-6 h-6 rounded-md bg-navy flex items-center justify-center shrink-0">
+                      <Check className="w-4 h-4 text-gold" />
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {/* BEST PLACES */}
+          <h2 className="font-serif text-3xl text-navy mt-12">Best Places to Visit</h2>
+          <div className="grid sm:grid-cols-2 gap-6 mt-6">
+            {info.places.map((p, i) => (
+              <motion.div
+                key={p.name}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: (i % 2) * 0.1, duration: 0.5 }}
+                className="group bg-white border border-gold/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition duration-300"
+              >
+                <div className="relative h-52 overflow-hidden">
+                  <PlacePhoto src={photoFor(p)} name={p.name} index={i} />
+                  <span className="absolute top-3 left-3 w-9 h-9 rounded-full bg-gold text-navy font-bold flex items-center justify-center shadow-lg">
+                    {i + 1}
+                  </span>
+                </div>
+                <div className="p-5">
+                  <h3 className="font-serif text-xl text-navy">{p.name}</h3>
+                  <p className="mt-2 text-sm text-slate-600 leading-relaxed">{p.text}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-4">Photos from Wikipedia and Wikimedia Commons, used under their open licences.</p>
+
+          {pkg && (
+            <>
+              <h2 className="font-serif text-3xl text-navy mt-12">Itinerary</h2>
+              <div className="mt-4 border-t border-gold/25">
+                {pkg.itinerary.map((step, i) => (
+                  <Row key={i} n={i + 1} title={'Day ' + (i + 1)} open={openDay === i} onToggle={() => setOpenDay(openDay === i ? -1 : i)}>
+                    <p className="text-sm text-slate-600 leading-relaxed">{step}</p>
+                  </Row>
+                ))}
+              </div>
+            </>
+          )}
+
+          <h2 className="font-serif text-3xl text-navy mt-12">Where to Stay</h2>
+          <div className="grid sm:grid-cols-2 gap-5 mt-5">
+            {info.stays.map((s) => (
+              <div key={s.name} className="bg-white border border-gold/25 rounded-2xl p-5 hover:shadow-lg transition">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="w-11 h-11 rounded-full bg-navy flex items-center justify-center shrink-0">
+                    <BedDouble className="w-5 h-5 text-gold" />
+                  </div>
+                  <span className={'text-xs font-semibold px-3 py-1 rounded-full ' + (badge[s.budget] || 'bg-gold text-navy')}>{s.budget}</span>
+                </div>
+                <h3 className="font-serif text-xl text-navy mt-3">{s.name}</h3>
+                <p className="text-sm text-slate-600 mt-1">{s.type}</p>
+                <p className="flex items-center gap-1 text-sm text-slate-600 mt-1"><MapPin className="w-4 h-4 text-gold-dark" /> {s.area}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-4">Stay suggestions only. Please check current availability and rates before booking.</p>
+        </div>
+
+        {/* PRICE CARD */}
+        <aside className="lg:sticky lg:top-28 h-fit bg-white border border-gold/30 rounded-2xl p-6 shadow-xl">
+          <span className="inline-flex items-center gap-1 bg-navy text-gold text-xs font-semibold px-3 py-1 rounded-md">
+            <Sparkles className="w-3 h-3" /> Featured
+          </span>
+          <p className="font-serif text-3xl text-navy mt-4">{pkg ? pkg.days + ' days' : d.name}</p>
+          <p className="text-slate-500">{pkg ? pkg.destination : d.country}</p>
+          <p className="font-serif text-5xl text-navy mt-4">
+            ${d.price} <span className="text-sm text-slate-500 font-sans">USD / person</span>
+          </p>
+          <div className="flex items-center gap-1 mt-3">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Star key={n} className={'w-4 h-4 ' + (n <= Math.round(d.rating) ? 'text-gold fill-gold' : 'text-slate-300')} />
+            ))}
+            <span className="text-sm text-slate-600 ml-2">{d.rating} / 5</span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 mt-5 border border-gold/25 rounded-xl p-3 text-center">
+            <div><BedDouble className="w-5 h-5 mx-auto text-gold-dark" /><p className="text-sm font-semibold text-navy mt-1">{info.stays.length}</p><p className="text-[11px] text-slate-500">Stays</p></div>
+            <div><Compass className="w-5 h-5 mx-auto text-gold-dark" /><p className="text-sm font-semibold text-navy mt-1">{info.places.length}</p><p className="text-[11px] text-slate-500">Places</p></div>
+            <div><CalendarDays className="w-5 h-5 mx-auto text-gold-dark" /><p className="text-sm font-semibold text-navy mt-1">{months.size}</p><p className="text-[11px] text-slate-500">Best months</p></div>
+          </div>
+
+          <Link to={bookTo} className="block text-center mt-5 bg-navy hover:bg-gold text-gold hover:text-navy font-semibold py-3 rounded-full transition">
+            {pkg ? 'Book Now' : 'Enquire Now'}
+          </Link>
+          <Link to="/planner" className="flex items-center justify-center gap-2 mt-3 border border-navy text-navy hover:bg-navy hover:text-gold font-semibold py-3 rounded-full transition">
+            <Sparkles className="w-4 h-4" /> Use AI Planner
+          </Link>
+        </aside>
+      </section>
+
+      {/* RECOMMENDED */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+        <h2 className="font-serif text-3xl text-navy">Recommended for you</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-6">
+          {similar.map((x) => (
+            <Link
+              key={x.id}
+              to={'/destinations/' + x.id}
+              className="group bg-white border border-gold/20 rounded-2xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition duration-300"
+            >
+              <div className="h-44 overflow-hidden">
+                <img src={x.img} alt={x.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+              </div>
+              <div className="p-5">
+                <h3 className="font-serif text-xl text-navy">{x.name}</h3>
+                <p className="flex items-center gap-1 text-sm text-slate-600 mt-1"><MapPin className="w-4 h-4 text-gold-dark" /> {x.country}</p>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gold/20">
+                  <p className="text-sm text-slate-500">From <span className="text-navy font-semibold text-lg">${x.price}</span></p>
+                  <span className="flex items-center gap-1 text-sm text-gold-dark font-semibold">
+                    Explore <ArrowRight className="w-4 h-4" />
+                  </span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
     </>
   )
 }
